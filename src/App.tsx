@@ -1,10 +1,12 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { MIDI_C2, generateNoteRange } from './audio/notes'
+import { MIDI_C2, generateNoteRange, midiToNoteName } from './audio/notes'
 import { buildKeyboardMapping } from './audio/keyboardMapping'
-import { playNote, stopNote } from './audio/audioEngine'
+import { playNote, stopNote, setMasterVolume, setWaveform } from './audio/audioEngine'
 import { usePianoKeyboardInput } from './hooks/usePianoKeyboardInput'
+import type { WaveformType } from './types'
 import Piano from './components/Piano'
-import Controls from './components/Controls'
+import Controls, { INSTRUMENTS } from './components/Controls'
+import StatusBar from './components/StatusBar'
 
 const OCTAVES = 4
 const RANGE_START = MIDI_C2
@@ -14,10 +16,13 @@ const RANGE_END = MIDI_C2 + OCTAVES * 12
 // anchoring the mapping somewhere it would spill past the rendered range.
 const MAPPING_SPAN = 16
 const DEFAULT_KEYBOARD_BASE = RANGE_START + 12
+const DEFAULT_VOLUME = 0.7
 
 function App() {
   const [showLabels, setShowLabels] = useState(true)
   const [keyboardBase, setKeyboardBase] = useState(DEFAULT_KEYBOARD_BASE)
+  const [instrument, setInstrument] = useState<WaveformType>('piano')
+  const [volume, setVolume] = useState(DEFAULT_VOLUME)
   const [pressedNotes, setPressedNotes] = useState<Set<number>>(
     () => new Set(),
   )
@@ -64,7 +69,24 @@ function App() {
     [keyboardBase],
   )
 
+  const handleInstrumentChange = useCallback((next: WaveformType) => {
+    setInstrument(next)
+    setWaveform(next)
+  }, [])
+
+  const handleVolumeChange = useCallback((next: number) => {
+    setVolume(next)
+    setMasterVolume(next)
+  }, [])
+
   usePianoKeyboardInput(keyboardMapping, handlePress, handleRelease)
+
+  const activeNoteNames = useMemo(
+    () => [...pressedNotes].sort((a, b) => a - b).map(midiToNoteName),
+    [pressedNotes],
+  )
+  const instrumentLabel =
+    INSTRUMENTS.find((i) => i.value === instrument)?.label ?? instrument
 
   return (
     <div className="flex min-h-full flex-col items-center justify-center gap-6 bg-gradient-to-b from-neutral-950 via-neutral-900 to-neutral-800 px-4 py-8 text-neutral-100">
@@ -82,6 +104,10 @@ function App() {
             onShiftOctave={handleShiftOctave}
             canShiftDown={keyboardBase - 12 >= RANGE_START}
             canShiftUp={keyboardBase + 12 + MAPPING_SPAN <= RANGE_END}
+            instrument={instrument}
+            onInstrumentChange={handleInstrumentChange}
+            volume={volume}
+            onVolumeChange={handleVolumeChange}
           />
 
           <Piano
@@ -92,6 +118,13 @@ function App() {
             pressedNotes={pressedNotes}
             onPress={handlePress}
             onRelease={handleRelease}
+          />
+
+          <StatusBar
+            instrumentLabel={instrumentLabel}
+            rangeLabel={`${midiToNoteName(RANGE_START)}–${midiToNoteName(RANGE_END)}`}
+            volume={volume}
+            activeNoteNames={activeNoteNames}
           />
         </div>
       </div>

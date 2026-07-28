@@ -23,12 +23,14 @@ let audioContext: AudioContext | null = null
 let masterGain: GainNode | null = null
 let pianoWave: PeriodicWave | null = null
 let waveform: WaveformType = 'piano'
+let masterVolume = 0.7
 const activeVoices = new Map<number, Voice>()
 
 function getContext(): { context: AudioContext; master: GainNode } {
   if (!audioContext || !masterGain) {
     audioContext = new AudioContext()
     masterGain = audioContext.createGain()
+    masterGain.gain.value = masterVolume
     masterGain.connect(audioContext.destination)
   }
   if (audioContext.state === 'suspended') {
@@ -51,8 +53,8 @@ export function setWaveform(type: WaveformType) {
 }
 
 export function setMasterVolume(volume: number) {
-  const { master } = getContext()
-  master.gain.value = volume
+  masterVolume = volume
+  if (masterGain) masterGain.gain.value = volume
 }
 
 export function playNote(midi: number) {
