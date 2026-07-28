@@ -16,6 +16,7 @@ const NOTE_NAMES = [
 ]
 
 export const MIDI_C4 = 60
+export const MIDI_C2 = MIDI_C4 - 24
 
 export function midiToFrequency(midi: number): number {
   return 440 * 2 ** ((midi - 69) / 12)

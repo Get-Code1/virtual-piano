@@ -29,14 +29,17 @@ function Key({ note, label, showLabel, isPressed, onPress, onRelease }: KeyProps
       <button
         type="button"
         aria-label={note.name}
-        className={`absolute top-0 h-[60%] w-full select-none rounded-b-md border border-neutral-950 shadow-md transition-colors ${
-          isPressed ? 'bg-neutral-600' : 'bg-neutral-900'
+        data-midi={note.midi}
+        className={`absolute top-0 h-[60%] w-full select-none rounded-b-lg border border-black bg-gradient-to-b shadow-[0_3px_6px_rgba(0,0,0,0.6)] transition-all duration-75 ${
+          isPressed
+            ? 'translate-y-0.5 from-neutral-600 to-neutral-950 shadow-[0_1px_2px_rgba(0,0,0,0.6)]'
+            : 'from-neutral-700 to-black'
         }`}
         style={{ touchAction: 'none' }}
         {...handlers}
       >
         {showLabel && label && (
-          <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-neutral-300">
+          <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 text-[0.65rem] text-neutral-300">
             {label}
           </span>
         )}
@@ -45,12 +48,15 @@ function Key({ note, label, showLabel, isPressed, onPress, onRelease }: KeyProps
   }
 
   return (
-    <div className="relative h-full flex-1">
+    <div className="relative h-full min-w-[32px] flex-1">
       <button
         type="button"
         aria-label={note.name}
-        className={`relative h-full w-full select-none rounded-b-md border border-neutral-300 shadow transition-colors ${
-          isPressed ? 'bg-neutral-300' : 'bg-white'
+        data-midi={note.midi}
+        className={`relative h-full w-full select-none rounded-b-lg border border-neutral-400/70 bg-gradient-to-b shadow-[0_3px_4px_rgba(0,0,0,0.2)] transition-all duration-75 ${
+          isPressed
+            ? 'translate-y-0.5 from-neutral-300 to-neutral-400 shadow-inner'
+            : 'from-white to-neutral-100'
         }`}
         style={{ touchAction: 'none' }}
         {...handlers}
