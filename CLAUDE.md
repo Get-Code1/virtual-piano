@@ -5,8 +5,10 @@ Guidance for working on this repo.
 ## What this is
 
 A single-page virtual piano. No backend, no persistence — everything runs in
-the browser. Sound is synthesized with the Web Audio API (oscillators), not
-audio file playback.
+the browser. Sound is synthesized with the Web Audio API (oscillators plus a
+custom `PeriodicWave` for the grand-piano voice), not audio file playback.
+The keyboard spans 4 octaves (C2–C6) and scrolls horizontally when it doesn't
+fit the viewport.
 
 ## Stack
 
@@ -33,11 +35,13 @@ src/
     audioEngine.ts           # AudioContext singleton, playNote/stopNote, master gain, waveform
   hooks/
     usePianoKeyboardInput.ts # keydown/keyup -> note on/off, ignores OS auto-repeat
+    useMetronome.ts          # lookahead click scheduler (BPM, start/stop, on-beat callback)
     useRecorder.ts           # record/playback of played notes
   components/
-    Piano.tsx                # lays out white + black keys for the current octave range
+    Piano.tsx                # lays out white + black keys, horizontally scrollable container
     Key.tsx                  # single key: pointer handlers, pressed-visual state, label
-    Controls.tsx             # label toggle, octave shift, volume, waveform, record/play
+    Controls.tsx             # octave nav, instrument, volume, metronome, label toggle, record/play
+    StatusBar.tsx            # current instrument / range / volume / held notes readout
 ```
 
 ## Conventions
@@ -54,6 +58,18 @@ src/
 - **Active notes live in a `Map<midi, ...>`** so the same note can't be
   double-triggered by OS key auto-repeat, and so multiple simultaneous notes
   (chords / mouse + keyboard at once) all play and release independently.
+- **Notes get a percussive envelope, not a flat sustain**: sharp attack, fast
+  decay to a lower level, then a slow ongoing decay while held
+  (`setTargetAtTime`), and a short release ramp on key-up — a real piano note
+  fades even while the key stays down, unlike an organ/synth pad.
+- **The computer-keyboard mapping is re-anchored, not re-rendered**, when the
+  octave-shift buttons are used: the full 4-octave keyboard always renders,
+  and shifting just moves which base note `buildKeyboardMapping` anchors to
+  (plus scrolls that note into view). Don't shrink/grow the rendered note
+  range to do octave shifting.
+- **The metronome schedules clicks against `AudioContext` time**
+  (`audioEngine.getAudioTime()` / `playClickAt`), not raw `setInterval` beats
+  — a JS timer only decides *when to schedule*, so playback doesn't drift.
 - Keep components small and presentational; audio/timing logic lives in
   `audio/` and `hooks/`, not inside JSX event handlers.
 
@@ -61,6 +77,6 @@ src/
 
 - Commit after each working milestone (keyboard renders, audio works,
   recording works, etc.) rather than one large commit.
-- Stop after the core keyboard + sound milestone for manual browser testing
-  before starting the extras (octave shift, volume, waveform selector,
-  record/playback).
+- Stop after each milestone for manual browser testing before starting the
+  next one. Octave navigation, instrument selection, volume, and the
+  metronome are done; record/playback is the remaining planned extra.
