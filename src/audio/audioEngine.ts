@@ -108,3 +108,32 @@ export function stopNote(midi: number) {
     gain.disconnect()
   })
 }
+
+const CLICK_SECONDS = 0.05
+
+/** Current AudioContext time, for scheduling metronome clicks precisely. */
+export function getAudioTime(): number {
+  const { context } = getContext()
+  return context.currentTime
+}
+
+/** A short percussive click, scheduled at an exact AudioContext time. */
+export function playClickAt(time: number) {
+  const { context, master } = getContext()
+  const oscillator = context.createOscillator()
+  const gain = context.createGain()
+
+  oscillator.type = 'sine'
+  oscillator.frequency.value = 1000
+  gain.gain.setValueAtTime(0.5, time)
+  gain.gain.exponentialRampToValueAtTime(0.001, time + CLICK_SECONDS)
+
+  oscillator.connect(gain)
+  gain.connect(master)
+  oscillator.start(time)
+  oscillator.stop(time + CLICK_SECONDS)
+  oscillator.addEventListener('ended', () => {
+    oscillator.disconnect()
+    gain.disconnect()
+  })
+}

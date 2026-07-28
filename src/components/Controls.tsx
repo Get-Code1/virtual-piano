@@ -17,6 +17,11 @@ interface ControlsProps {
   onInstrumentChange: (instrument: WaveformType) => void
   volume: number
   onVolumeChange: (volume: number) => void
+  bpm: number
+  onBpmChange: (bpm: number) => void
+  isMetronomePlaying: boolean
+  onToggleMetronome: () => void
+  beatTick: number
 }
 
 function Controls({
@@ -29,6 +34,11 @@ function Controls({
   onInstrumentChange,
   volume,
   onVolumeChange,
+  bpm,
+  onBpmChange,
+  isMetronomePlaying,
+  onToggleMetronome,
+  beatTick,
 }: ControlsProps) {
   return (
     <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 rounded-lg bg-neutral-800/60 px-4 py-3 text-neutral-200 shadow-inner">
@@ -98,6 +108,41 @@ function Controls({
         />
         Show key labels
       </label>
+
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onToggleMetronome}
+          className={`flex items-center gap-1.5 rounded px-2 py-1 text-sm shadow transition-colors ${
+            isMetronomePlaying
+              ? 'bg-amber-600 text-neutral-950 hover:bg-amber-500'
+              : 'bg-neutral-700 text-neutral-100 hover:bg-neutral-600'
+          }`}
+        >
+          <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
+            <path d="M9 3h6l1 4-4 12h-2L6 7l1-4zm1.5 4L12 15l1.5-8h-3z" />
+          </svg>
+          {isMetronomePlaying ? 'Stop' : 'Metronome'}
+          {isMetronomePlaying && (
+            <span
+              key={beatTick}
+              className="h-2 w-2 animate-ping rounded-full bg-neutral-950"
+              aria-hidden="true"
+            />
+          )}
+        </button>
+        <input
+          type="range"
+          min={40}
+          max={240}
+          step={1}
+          value={bpm}
+          onChange={(e) => onBpmChange(Number(e.target.value))}
+          className="w-24 accent-amber-600"
+          aria-label="Metronome tempo"
+        />
+        <span className="w-16 text-sm text-neutral-400">{bpm} BPM</span>
+      </div>
     </div>
   )
 }

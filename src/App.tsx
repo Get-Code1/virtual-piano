@@ -3,6 +3,7 @@ import { MIDI_C2, generateNoteRange, midiToNoteName } from './audio/notes'
 import { buildKeyboardMapping } from './audio/keyboardMapping'
 import { playNote, stopNote, setMasterVolume, setWaveform } from './audio/audioEngine'
 import { usePianoKeyboardInput } from './hooks/usePianoKeyboardInput'
+import { useMetronome } from './hooks/useMetronome'
 import type { WaveformType } from './types'
 import Piano from './components/Piano'
 import Controls, { INSTRUMENTS } from './components/Controls'
@@ -17,12 +18,16 @@ const RANGE_END = MIDI_C2 + OCTAVES * 12
 const MAPPING_SPAN = 16
 const DEFAULT_KEYBOARD_BASE = RANGE_START + 12
 const DEFAULT_VOLUME = 0.7
+const DEFAULT_BPM = 100
 
 function App() {
   const [showLabels, setShowLabels] = useState(true)
   const [keyboardBase, setKeyboardBase] = useState(DEFAULT_KEYBOARD_BASE)
   const [instrument, setInstrument] = useState<WaveformType>('piano')
   const [volume, setVolume] = useState(DEFAULT_VOLUME)
+  const [bpm, setBpm] = useState(DEFAULT_BPM)
+  const [isMetronomePlaying, setIsMetronomePlaying] = useState(false)
+  const [beatTick, setBeatTick] = useState(0)
   const [pressedNotes, setPressedNotes] = useState<Set<number>>(
     () => new Set(),
   )
@@ -80,6 +85,7 @@ function App() {
   }, [])
 
   usePianoKeyboardInput(keyboardMapping, handlePress, handleRelease)
+  useMetronome(bpm, isMetronomePlaying, () => setBeatTick((t) => t + 1))
 
   const activeNoteNames = useMemo(
     () => [...pressedNotes].sort((a, b) => a - b).map(midiToNoteName),
@@ -108,6 +114,11 @@ function App() {
             onInstrumentChange={handleInstrumentChange}
             volume={volume}
             onVolumeChange={handleVolumeChange}
+            bpm={bpm}
+            onBpmChange={setBpm}
+            isMetronomePlaying={isMetronomePlaying}
+            onToggleMetronome={() => setIsMetronomePlaying((prev) => !prev)}
+            beatTick={beatTick}
           />
 
           <Piano
