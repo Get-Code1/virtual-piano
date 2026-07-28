@@ -1,4 +1,4 @@
-export type WaveformType = 'sine' | 'triangle' | 'sawtooth'
+export type WaveformType = 'piano' | 'sine' | 'triangle' | 'sawtooth'
 
 export interface Note {
   /** MIDI note number (C4 = 60). */
